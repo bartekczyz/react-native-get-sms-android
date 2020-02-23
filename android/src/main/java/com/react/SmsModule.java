@@ -1,60 +1,39 @@
 
 package com.react;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
-
-import android.content.ContentValues;
-import android.os.Bundle;
-import android.widget.Toast;
-import android.app.LoaderManager;
+import android.app.Activity;
 import android.app.PendingIntent;
-import android.app.PendingIntent.CanceledException;
-import android.content.ContentResolver;
-import android.content.CursorLoader;
-import android.content.Intent;
-import android.content.Loader;
+import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
-import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
-
 import android.telephony.SmsManager;
-import android.telephony.SmsMessage;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderManager.LoaderCallbacks<Cursor>*/ {
-    //    private LoaderManager mManager;
-    private Cursor smsCursor;
-    private Map<Long, String> smsList;
-    private Map<Long, Object> smsListBody;
     Activity mActivity = null;
     private static Context context;
     private ReactContext mReactContext;
-    private Callback cb_autoSend_succ = null;
-    private Callback cb_autoSend_err = null;
 
-    public SmsModule(ReactApplicationContext reactContext) {
+    SmsModule(ReactApplicationContext reactContext) {
         super(reactContext);
         mReactContext = reactContext;
-        smsList = new HashMap<Long, String>();
         context = reactContext.getApplicationContext();
     }
 
@@ -126,7 +105,6 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
             }
         } catch (JSONException e) {
             errorCallback.invoke(e.getMessage());
-            return;
         }
     }
 
@@ -185,13 +163,10 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
                     successCallback.invoke("OK");
                 } catch (PendingIntent.CanceledException e) {
                     errorCallback.invoke(e.getMessage());
-                    return;
                 }
             }
-            return;
         } catch (JSONException e) {
             errorCallback.invoke(e.getMessage());
-            return;
         }
 
     }
@@ -205,10 +180,8 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
             } else {
                 errorCallback.invoke("SMS not found");
             }
-            return;
         } catch (Exception e) {
             errorCallback.invoke(e.getMessage());
-            return;
         }
     }
 
@@ -221,8 +194,8 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
         try {
             String SENT = "SMS_SENT";
             String DELIVERED = "SMS_DELIVERED";
-            ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>();
-            ArrayList<PendingIntent> deliveredPendingIntents = new ArrayList<PendingIntent>();
+            ArrayList<PendingIntent> sentPendingIntents = new ArrayList<>();
+            ArrayList<PendingIntent> deliveredPendingIntents = new ArrayList<>();
 
             PendingIntent sentPI = PendingIntent.getBroadcast(context, 0, new Intent(SENT), 0);
             PendingIntent deliveredPI = PendingIntent.getBroadcast(context, 0, new Intent(DELIVERED), 0);
