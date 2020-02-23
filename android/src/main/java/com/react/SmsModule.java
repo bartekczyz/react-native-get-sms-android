@@ -216,25 +216,8 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
         reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
     }
 
-    private void sendCallback(String message, boolean success) {
-        if (success && cb_autoSend_succ != null) {
-            cb_autoSend_succ.invoke(message);
-            cb_autoSend_succ = null;
-        } else if (!success && cb_autoSend_err != null) {
-            cb_autoSend_err.invoke(message);
-            cb_autoSend_err = null;
-        }
-
-    }
-
-
     @ReactMethod
-    public void autoSend(String phoneNumber, String message, final Callback errorCallback,
-                         final Callback successCallback) {
-
-        cb_autoSend_succ = successCallback;
-        cb_autoSend_err = errorCallback;
-
+    public void autoSend(String phoneNumber, String message, final Promise promise) {
         try {
             String SENT = "SMS_SENT";
             String DELIVERED = "SMS_DELIVERED";
@@ -250,19 +233,19 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
                 public void onReceive(Context arg0, Intent arg1) {
                     switch (getResultCode()) {
                         case Activity.RESULT_OK:
-                            sendCallback("SMS sent", true);
+                            promise.resolve("Sent");
                             break;
                         case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                            sendCallback("Generic failure", false);
+                            promise.reject("FAIL","Generic failure");
                             break;
                         case SmsManager.RESULT_ERROR_NO_SERVICE:
-                            sendCallback("No service", false);
+                            promise.reject("FAIL","No service");
                             break;
                         case SmsManager.RESULT_ERROR_NULL_PDU:
-                            sendCallback("Null PDU", false);
+                            promise.reject("FAIL","Null PDU");
                             break;
                         case SmsManager.RESULT_ERROR_RADIO_OFF:
-                            sendCallback("Radio off", false);
+                            promise.reject("FAIL","Radio off");
                             break;
                     }
                 }
@@ -298,7 +281,7 @@ public class SmsModule extends ReactContextBaseJavaModule /*implements LoaderMan
             context.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
 
         } catch (Exception e) {
-            sendCallback(e.getMessage(), false);
+            promise.reject("Exception", e.getMessage());
         }
     }
 }
